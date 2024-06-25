@@ -1,0 +1,57 @@
+#!/bin/bash
+# Function to display help
+show_help() {
+    echo "Usage: $0 [-h] [-t TARGET]"
+    echo
+    echo "Options:"
+    echo "  -h          Display this help message"
+    echo "  -n NAME     Specify the  NAME target"
+    echo "  -i IP       Specify the IP target"
+    exit 1
+}
+# Initialize variables
+name=""
+ip=""
+VPNON=$(ip a | grep 'tun0:' | awk '{print $2}' | tr -d ':')
+
+# Process options
+while getopts "hn:i:" opt; do
+    case $opt in
+        h)
+            show_help
+            ;;
+        n)
+            name=$OPTARG
+            ;;
+        i)
+            ip=$OPTARG
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            show_help
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            show_help
+            ;;
+    esac
+done
+
+# Check if the target has been specificated
+if [ -z "$name" ]; then
+    echo "You must specify a target with the -n and -i option." >&2
+    show_help
+fi
+# Update Name and IP  only if the VPN is UP
+ping -c 1 -W 2 $ip > /dev/null 2>&1
+
+if [ $? -eq 0  ] && [ "$VPNON" = "tun0" ] && [ -n "$ip" ]; then
+    echo "$name" > ~/.config/polybar/htb/targname
+    echo -e "\e[1;32m[+]\e[0m\e[37m HtB target name update.\e[0m"
+    echo "$ip" > ~/.config/polybar/htb/targip
+    echo -e "\e[1;32m[+]\e[0m\e[37m HtB target ip update.\e[0m"
+else
+        echo "" > ~/.config/polybar/htb/targname
+        echo "" > ~/.config/polybar/htb/targip
+        echo -e "\e[1;31m[+]\e[0m\e[37m Connect HtB VPN firts or check the target IP.\e[0m"
+fi

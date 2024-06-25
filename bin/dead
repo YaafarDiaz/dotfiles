@@ -1,0 +1,4 @@
+#!/bin/bash
+killall openvpn &>/dev/null
+echo "" > ~/.config/polybar/htb/targname
+echo "" > ~/.config/polybar/htb/targip
